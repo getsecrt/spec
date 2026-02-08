@@ -103,7 +103,7 @@ Logging fields:
 
 - method, path, status, bytes, duration_ms, request_id (if present)
 
-The server intentionally does not trust `X-Forwarded-For`; client identity for rate limiting uses `RemoteAddr` host parsing.
+The server trusts `X-Forwarded-For` only when `RemoteAddr` is loopback (`127.0.0.1` or `::1`), extracting the leftmost IP for rate limiting. When not behind a trusted proxy, client identity uses `RemoteAddr` directly.
 
 ## 5. Route Surface (Current)
 
