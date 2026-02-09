@@ -87,15 +87,24 @@ Supported keys:
 |---|---|---|
 | `api_key` | string | API key for authenticated endpoints |
 | `base_url` | string | Base service URL |
+| `default_ttl` | string | Default TTL for secrets (e.g., `5m`, `2h`, `1d`, `1w`) |
 | `passphrase` | string | Default passphrase for encryption/decryption |
-| `show_input` | bool | Show secret input as typed (default: false) |
+| `decryption_passphrases` | string[] | Additional passphrases to try when claiming (tried in order) |
+| `show_input` | bool | Show secret input as typed (default: `false`) |
+
+`default_ttl` precedence: `--ttl` flag > config `default_ttl` > none (server decides).
+
+`default_ttl` is validated at create time using the TTL grammar defined below, not at config load time.
 
 Example:
 
 ```toml
 api_key = "sk_live_abc123"
 base_url = "https://my-server.example.com"
+default_ttl = "24h"
 passphrase = "my-default-passphrase"
+decryption_passphrases = ["old-passphrase", "team-passphrase"]
+show_input = false
 ```
 
 #### File Permission Requirements
@@ -137,6 +146,28 @@ Keychain errors (missing credential, unavailable keychain) MUST be handled grace
 When a passphrase is provided via config file or keychain (and no explicit `--passphrase-*` flag is set), the passphrase SHOULD be used silently without prompting for confirmation — it is a pre-configured default, not interactive input.
 
 Explicit passphrase flags (`--passphrase-prompt`, `--passphrase-env`, `--passphrase-file`) always take precedence over a configured passphrase.
+
+### Passphrase Trial Order During Claim
+
+When no explicit passphrase flag (`-p`, `--passphrase-env`, `--passphrase-file`) is set, implementations SHOULD try configured passphrases in this order:
+
+1. `passphrase` from keychain/config (the existing default passphrase, tried first)
+2. Each entry in `decryption_passphrases` (in order, deduplicated against #1)
+3. Interactive prompt on TTY / error on non-TTY
+
+When an explicit passphrase flag is set, the `decryption_passphrases` list is bypassed entirely — explicit flags represent deliberate user action.
+
+Only `DecryptionFailed` errors should trigger the next candidate; other errors (e.g., `InvalidEnvelope`) should propagate immediately.
+
+`decryption_passphrases` is a secret-bearing field and MUST be subject to the same file permission requirements as `api_key` and `passphrase`.
+
+### Keychain Storage for Passphrase Lists
+
+Implementations MAY support storing `decryption_passphrases` in the OS keychain as a JSON-encoded array string (e.g., `["p1","p2"]`). If JSON parsing fails, the raw string SHOULD be treated as a single-entry list (graceful fallback). Keychain entries are merged with config file entries, with keychain entries taking priority order (listed first), and duplicates removed.
+
+| Key | Description |
+|---|---|
+| `decryption_passphrases` | JSON array of additional passphrases to try when claiming |
 
 ## Output Discipline
 
