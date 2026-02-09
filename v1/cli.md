@@ -264,8 +264,9 @@ Behavior:
 Output:
 
 - Default mode: print plaintext to stdout only.
+  - When stdout is a TTY, implementations SHOULD print a brief label (e.g., `"Secret:"`) to stderr before the plaintext, so the output is clearly identified as the decrypted secret rather than an error or status message.
   - When stdout is a TTY and the plaintext does not end with a newline (`\n`), implementations SHOULD append a trailing newline for clean terminal display (avoids shell prompt artifacts like zsh's `%` indicator).
-  - When stdout is piped or redirected, the raw decrypted bytes MUST be written exactly as-is with no modification, to preserve secret integrity for binary secrets or downstream consumers.
+  - When stdout is piped or redirected, the raw decrypted bytes MUST be written exactly as-is with no modification, and no label MUST be printed, to preserve secret integrity for binary secrets or downstream consumers.
 - `--json` mode: SHOULD avoid embedding plaintext unless explicitly requested by implementation, to reduce accidental logging exposure.
 
 ## `burn` (optional)
