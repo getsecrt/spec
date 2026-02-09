@@ -355,15 +355,19 @@ When reading interactive single-line input on a TTY, implementations SHOULD defa
 On TTY, implementations SHOULD display a status indicator during upload:
 
 - **In-progress:** yellow circle (`○`) with message (e.g., `○ Encrypting and uploading...`)
-- **Success:** green checkmark (`✓`) with message (e.g., `✓ Encrypted and uploaded!`)
+- **Success:** green checkmark (`✓`) with message and expiry in DIM (e.g., `✓ Encrypted and uploaded.  Expires 2026-02-10 09:30`)
 
 The success line SHOULD overwrite the in-progress line using carriage return (`\r`).
+
+The expiry timestamp SHOULD be formatted as `Expires YYYY-MM-DD HH:MM` in DIM to provide immediate feedback about secret lifetime without cluttering the primary output.
 
 `--silent` suppresses all status indicators. Errors are never suppressed.
 
 ## Color & Styling
 
 Implementations SHOULD use semantic color tokens for TTY output. All color MUST be suppressed when output is not a TTY.
+
+### Semantic Color Tokens
 
 | Token | ANSI SGR | Usage |
 |---|---|---|
@@ -374,8 +378,26 @@ Implementations SHOULD use semantic color tokens for TTY output. All color MUST 
 | SUCCESS | 32 (green) | Success indicators |
 | ERROR | 31 (red) | Error prefix |
 | URL | 1;36 (bold cyan) | Share URLs |
-| DIM | 2 (dim) | Prompts, status, secondary text |
+| LABEL | 37 (white) | Prompt labels that request user input ("Secret:", "Passphrase:") |
+| DIM | 2 (dim) | Status messages, hints, secondary info text |
 | WARN | 33 (yellow) | Warnings, in-progress indicators |
+
+### Styling Guidelines
+
+**Visual hierarchy:**
+
+- **LABEL** (white) for prompts requesting input — they need attention
+- **DIM** for contextual info and status — secondary importance
+- **SUCCESS/ERROR/WARN** for outcomes — clear visual feedback
+- **URL** for copyable output — stands out, easy to select
+
+**Output values** (share links, decrypted secrets) SHOULD be on their own line with no leading/trailing decoration, making clipboard selection clean.
+
+**Progressive disclosure:**
+
+- Default: essential output only
+- `--silent`: suppress all status (errors never suppressed)
+- `--json`: machine-readable, suitable for scripting
 
 ## Interoperability Requirements
 
