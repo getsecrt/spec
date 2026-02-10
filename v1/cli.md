@@ -47,6 +47,22 @@ Built-in commands:
 - `secrt config init [--force]`: create a template config file.
 - `secrt config path`: print the config file path.
 
+### Implicit `claim` from Share URL
+
+When the first positional argument is not a recognized command but contains the fragment `#v1.` (indicating a share URL or bare ID with fragment), the CLI MUST treat the invocation as `secrt claim <arg> [remaining args...]`. This allows users to run:
+
+```bash
+secrt https://secrt.ca/s/abc123#v1.key...
+```
+
+as shorthand for:
+
+```bash
+secrt claim https://secrt.ca/s/abc123#v1.key...
+```
+
+The detection MUST be based solely on the presence of `#v1.` in the first argument. Full URL validation is deferred to the `claim` command's normal parsing.
+
 Operational/admin API-key management commands are implementation-specific and out of scope for this client-interoperability spec.
 
 ## Global Options
